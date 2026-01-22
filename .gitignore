@@ -5,8 +5,9 @@
 /.eide.usr.ctx.json
 
 # project out
-/build
+/Objects
 /bin
+
 
 /obj
 /out
