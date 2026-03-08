@@ -29,9 +29,9 @@ void PUL(uint8_t i)
 {
 	if(i)
 	{
-		GPIO_SetBits(GPIOB,GPIO_Pin_8);
+		GPIO_SetBits(GPIOA,GPIO_Pin_11);
 	}else{
-		GPIO_ResetBits(GPIOB,GPIO_Pin_8);
+		GPIO_ResetBits(GPIOA,GPIO_Pin_11);
 	}
 }
 
@@ -66,24 +66,24 @@ int main(void)
     // NVIC_Set();
     // control_init();
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 
     // PUL
     GPIO_InitTypeDef GPIO_InitStructure;
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; /* 推挽输出 */
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
 
     // DIR
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
     while (1)
     {
         // create_t_ctrl_param(SPR * g_step_angle, g_step_accel, g_step_decel, g_set_speed);
         // g_add_pulse_count = 0;
         // Delay_ms(10000);
-        for (int64_t i = 0; i < 320000;i++)
+        for (int64_t i = 0; i < 1600;i++)
 		{
             A_PUL();
         }
