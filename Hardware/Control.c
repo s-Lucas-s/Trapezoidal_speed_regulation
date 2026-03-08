@@ -10,6 +10,8 @@ void stepper_start(void)
     // TOGGLE模式：开启通道4输出 + 使能捕获比较中断
     TIM_CCxCmd(TIM1, TIM_Channel_4, TIM_CCx_Enable);
     TIM_ITConfig(TIM1, TIM_IT_CC4, ENABLE); // 开启CC4中断
+    // 开启PWM输出
+    TIM_CtrlPWMOutputs(TIM1, ENABLE);
 }
 
 /**
@@ -24,8 +26,15 @@ void stepper_stop(void)
     TIM_CCxCmd(TIM1, TIM_Channel_4, TIM_CCx_Disable); // 关闭通道4输出
     // 清除中断标志位（避免残留中断触发）
     TIM_ClearITPendingBit(TIM1, TIM_IT_CC4);
+    //关闭PWM输出
+    TIM_CtrlPWMOutputs(TIM1, DISABLE);
 }
 
+/**
+ * @brief       定时器初始化
+ * @param       无
+ * @retval      无
+ */
 void Timer_init(void)
 {                                                         /*开启时钟*/
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);  // 开启TIM1的时钟
@@ -61,14 +70,18 @@ void Timer_init(void)
     TIM_OCInitStructure.TIM_Pulse = 36;                           // 初始的CCR值
     TIM_OC4Init(TIM1, &TIM_OCInitStructure);                      // 将结构体变量交给TIM_OC4Init，配置TIM2的输出比较通道1
     TIM_OC4PreloadConfig(TIM1, TIM_OCPreload_Disable);            // 关闭预转载
-    TIM_CtrlPWMOutputs(TIM1, ENABLE);
 
     TIM_ITConfig(TIM1, TIM_IT_CC4, ENABLE); // 清除中断标志
     /*TIM使能*/
     TIM_Cmd(TIM1, ENABLE); // 使能TIM1，定时器开始运行
 }
 
-void control_init()
+/**
+ * @brief       电机控制初始化
+ * @param       无
+ * @retval      无
+ */
+void control_init(void)
 {
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 

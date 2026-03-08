@@ -3,6 +3,8 @@
 
 #include "sys.h"
 
+//      Timx     Tim1
+//      OC       OC4
 //      PUL_GPIO GPIOA
 //      PUL_Pin  GPIO_Pin_11
 #define DIR_GPIO GPIOA
@@ -12,13 +14,13 @@
 
 /******************************************************************************************/
 
-#define TIM_FREQ       72000000U           /* 定时器主频 */
-#define MAX_STEP_ANGLE 0.001125            /* 最小步距(1.8/MICRO_STEP) */
-#define PAI            3.1415926           /* 圆周率*/
-#define FSPR           200                 /* 步进电机单圈步数 360°/108° */
-#define MICRO_STEP     1600                /* 步进电机驱动器细分数 */
-#define T1_FREQ        (TIM_FREQ / 36)     /* 频率ft值 */
-#define SPR            (FSPR * MICRO_STEP) /* 旋转一圈需要的脉冲数 */
+#define TIM_FREQ       72000000U            /* 定时器主频 */
+#define MAX_STEP_ANGLE 0.001125             /* 最小步距(1.8/MICRO_STEP) */
+#define PAI            3.1415926            /* 圆周率*/
+#define FSPR           200                  /* 步进电机单圈步数 360°/108° */
+#define MICRO_STEP     SPR / MAX_STEP_ANGLE /* 步进电机驱动器细分数 */
+#define T1_FREQ        (TIM_FREQ / 36)      /* 频率ft值 */
+#define SPR            1600                 /* 旋转一圈需要的脉冲数 */
 
 /* 数学常数 */
 
@@ -52,8 +54,8 @@ enum DIR {
 };
 
 enum EN {
-    EN_ON = 0, /* 失能脱机引脚 */
-    EN_OFF = 1    /* 使能脱机引脚 使能后电机停止旋转 */
+    EN_ON  = 0, /* 失能脱机引脚 */
+    EN_OFF = 1  /* 使能脱机引脚 使能后电机停止旋转 */
 };
 
 #define Set_DIR(x)                                                               \
@@ -61,14 +63,15 @@ enum EN {
         x ? GPIO_SetBits(DIR_GPIO, DIR_Pin) : GPIO_ResetBits(DIR_GPIO, DIR_Pin); \
     } while (0)
 
-#define Set_EN(x)                                                            \
-    do {                                                                     \
-        x ? GPIO_SetBits(EN_GPIO, EN_Pin) : GPIO_ResetBits(EN_GPIO, EN_Pin); \
-    } while (0)
+#define Set_EN(x)                                                                 \
+    do {                                                                          \
+        x ? GPIO_SetBits(EN_GPIO, EN_Pin) : GPIO_ResetBits(EN_GPIO, EN_Pin);      \
+        x ? TIM_CtrlPWMOutputs(TIM1, DISABLE) : TIM_CtrlPWMOutputs(TIM1, ENABLE); \
+    } while (0) /* TIM_CtrlPWMOutputs关闭波形输出 */
 
-void control_init(void);
-void stepper_start(void);          /* 开启步进电机 */
-void stepper_stop(void);          /* 关闭步进电机 */
+void control_init(void);  /* 控制初始化 */
+void stepper_start(void); /* 开启步进电机 */
+void stepper_stop(void);  /* 关闭步进电机 */
 
 void create_t_ctrl_param(int32_t step, uint32_t accel, uint32_t decel, uint32_t speed); /* 梯形加减速控制函数 */
 
