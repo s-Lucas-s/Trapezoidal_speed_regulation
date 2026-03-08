@@ -14,13 +14,13 @@
 
 /******************************************************************************************/
 
-#define TIM_FREQ       72000000U            /* 定时器主频 */
-#define MAX_STEP_ANGLE 0.001125             /* 最小步距(1.8/MICRO_STEP) */
-#define PAI            3.1415926            /* 圆周率*/
-#define FSPR           200                  /* 步进电机单圈步数 360°/108° */
-#define MICRO_STEP     SPR / MAX_STEP_ANGLE /* 步进电机驱动器细分数 */
-#define T1_FREQ        (TIM_FREQ / 36)      /* 频率ft值 */
-#define SPR            1600                 /* 旋转一圈需要的脉冲数 */
+#define TIM_FREQ       72000000U       /* 定时器主频 */
+#define MAX_STEP_ANGLE 0.225           /* 最小步距(360°/SPR) */
+#define PAI            3.1415926       /* 圆周率*/
+#define FSPR           200             /* 步进电机单圈步数 360°/108° */
+#define MICRO_STEP     1600            /* 步进电机驱动器细分数 */
+#define T1_FREQ        (TIM_FREQ / 36) /* 频率ft值 */
+#define SPR            1600            /* 旋转一圈需要的脉冲数          注：雷赛智能的驱动器的细分数为每转脉冲数，即，步数 / 圈 */
 
 /* 数学常数 */
 
@@ -48,6 +48,19 @@ enum STA {
     RUN       /* 加减速曲线状态：匀速阶段*/
 };
 
+/*
+ * EN上升沿 -> t1 -> DIR下降沿 -> t2 -> PUL下降沿
+ * t1：
+ *    a.出厂默认参数时 t1≥350ms；
+ *    b.默认参数下，单独开启抱闸功能时 t1≥600ms；
+ *     c.默认参数下，单独开启上电自运行功能时 t1≥550ms；
+ *    d.默认参数下，开启抱闸、上电自运行功能时 t1≥800ms；
+ * t2：
+ *     DIR 至少提前 PUL 下降沿 5μs 确定其状态高或低。
+ * PUL：
+ *    脉冲宽度至少不小于 2.5μs
+ */
+
 enum DIR {
     CCW = 0, /* 逆时针 */
     CW       /* 顺时针 */
@@ -66,7 +79,6 @@ enum EN {
 #define Set_EN(x)                                                                 \
     do {                                                                          \
         x ? GPIO_SetBits(EN_GPIO, EN_Pin) : GPIO_ResetBits(EN_GPIO, EN_Pin);      \
-        x ? TIM_CtrlPWMOutputs(TIM1, DISABLE) : TIM_CtrlPWMOutputs(TIM1, ENABLE); \
     } while (0) /* TIM_CtrlPWMOutputs关闭波形输出 */
 
 void control_init(void);  /* 控制初始化 */

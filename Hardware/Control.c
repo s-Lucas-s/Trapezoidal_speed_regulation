@@ -10,8 +10,10 @@ void stepper_start(void)
     // TOGGLE模式：开启通道4输出 + 使能捕获比较中断
     TIM_CCxCmd(TIM1, TIM_Channel_4, TIM_CCx_Enable);
     TIM_ITConfig(TIM1, TIM_IT_CC4, ENABLE); // 开启CC4中断
+    // 使能电机
+    Set_EN(EN_ON);
     // 开启PWM输出
-    TIM_CtrlPWMOutputs(TIM1, ENABLE);
+    TIM_CtrlPWMOutputs(TIM1, ENABLE); 
 }
 
 /**
@@ -26,8 +28,10 @@ void stepper_stop(void)
     TIM_CCxCmd(TIM1, TIM_Channel_4, TIM_CCx_Disable); // 关闭通道4输出
     // 清除中断标志位（避免残留中断触发）
     TIM_ClearITPendingBit(TIM1, TIM_IT_CC4);
-    //关闭PWM输出
-    TIM_CtrlPWMOutputs(TIM1, DISABLE);
+    // 失能电机
+    Set_EN(EN_OFF);
+    // 关闭PWM输出
+    TIM_CtrlPWMOutputs(TIM1, DISABLE); 
 }
 
 /**
@@ -95,6 +99,9 @@ void control_init(void)
     // DIR
     GPIO_InitStructure.GPIO_Pin = DIR_Pin;
     GPIO_Init(DIR_GPIO, &GPIO_InitStructure);
+
+    Set_DIR(CW);
+    Set_EN(EN_OFF);
 
     Timer_init();
 }
@@ -185,8 +192,8 @@ void create_t_ctrl_param(int32_t step, uint32_t accel, uint32_t decel, uint32_t 
         }
         g_srd.accel_count = 0; /* 复位加减速计数值 */
     }
-    g_motion_sta = 1; /* 电机为运动状态 */
-    Set_EN(EN_ON);
+    g_motion_sta = 1;                 /* 电机为运动状态 */
+    TIM_CtrlPWMOutputs(TIM1, ENABLE); // 开启PWM输出
     tim_count = TIM_GetCounter(TIM1);
     TIM_SetCompare4(TIM1, tim_count + g_srd.step_delay / 2); // 设置CH3通道比较值
     TIM_ITConfig(TIM1, TIM_IT_CC4, ENABLE);                  // 使能捕获比较3中断                                     /* 使能定时器通道 */
@@ -219,8 +226,8 @@ void TIM1_CC_IRQHandler(void)
                 rest = 0;       /* 清零余值 */
                 /* 关闭通道*/
                 TIM_ITConfig(TIM1, TIM_IT_CC4, DISABLE); // 关闭通道中断
-                Set_EN(EN_OFF);
-                g_motion_sta = 0; /* 电机为停止状态  */
+                TIM_CtrlPWMOutputs(TIM1, DISABLE);       // 关闭PWM输出
+                g_motion_sta = 0;                        /* 电机为停止状态  */
                 break;
 
             case ACCEL:
